@@ -4,7 +4,7 @@ const app = express();
 const cors = require('cors');
 const authRoutes = require("./routes/auth")
 const socket = require("socket.io")
-const DB = "mongodb+srv://shrutikushwaha42:Shruti2425@#@cluster0.ihxdgzq.mongodb.net/ChatApp?retryWrites=true&w=majority&appName=Cluster0";
+const DB = process.env.DB;
 require("dotenv").config();   //loads environment variables from a .env file into process.env
 
 mongoose.connect(DB,{
