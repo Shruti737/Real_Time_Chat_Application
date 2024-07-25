@@ -4,18 +4,19 @@ const app = express();
 const cors = require('cors');
 const authRoutes = require("./routes/auth")
 const socket = require("socket.io")
-const DB = process.env.DB;
 require("dotenv").config();   //loads environment variables from a .env file into process.env
+const DB = process.env.DB;
 
-mongoose.connect(DB,{
-  useNewUrlParser:true,
+mongoose.connect(DB, {
+  useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
   useFindAndModify: false
-}).then(()=>{
-  console.log("Connection Successfull");
-}).catch((err)=>
-  console.log("no Connection"));
+}).then(() => {
+  console.log("Connection Successful");
+}).catch((err) => {
+  console.error("Error connecting to MongoDB:", err.message);
+});
 
 app.use(express.json());
 const messageRoutes = require("./routes/messages");
