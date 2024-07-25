@@ -1,0 +1,67 @@
+const mongoose = require('mongoose');
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const authRoutes = require("./routes/auth")
+const socket = require("socket.io")
+const DB = "mongodb+srv://shrutikushwaha42:Shruti2425@#@cluster0.ihxdgzq.mongodb.net/ChatApp?retryWrites=true&w=majority&appName=Cluster0";
+require("dotenv").config();   //loads environment variables from a .env file into process.env
+
+mongoose.connect(DB,{
+  useNewUrlParser:true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false
+}).then(()=>{
+  console.log("Connection Successfull");
+}).catch((err)=>
+  console.log("no Connection"));
+
+app.use(express.json());
+const messageRoutes = require("./routes/messages");
+app.use(cors());
+// middleware for x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true}));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+
+(async()=>{
+    try{
+        await mongoose.connect(process.env.MONGO_URL,{ //process.env: This is an object in Node.js that contains the user environment. It allows you to access environment variables.
+          //  useNewUrlParser : true, //use the new MongoDB connection string parser instead of the deprecated one.
+          //  useUnifiedTopology: true, // This option enables the use of the new unified topology(System) engine in the MongoDB driver.
+            serverSelectionTimeoutMS: 30000 // Mongoose will wait up to 30 seconds to connect to a MongoDB server 
+        })
+        console.log("Db connection done");
+
+        const server = app.listen(process.env.PORT, () =>
+            console.log(`Server started on ${process.env.PORT}`)
+          );
+      
+          const io = socket(server, {  // used to  make connection passing an server port
+            cors: { // our severand client both are at the the different port to avoid the cors issue to make use cors
+              origin: process.env.ORIGIN,
+              credentials: true,
+            },
+          });
+      
+          global.onlineUsers = new Map();
+          io.on("connection", (socket) => {
+            global.chatSocket = socket;
+            socket.on("add-user", (userId) => {   // the emit value from client is listen here
+              onlineUsers.set(userId, socket.id);
+            });
+      
+            socket.on("send-msg", (data) => { // listen the msg from the client (Chat-container)
+             
+              const sendUserSocket = onlineUsers.get(data.to);
+              if (sendUserSocket) {
+                socket.to(sendUserSocket).emit("msg-recieve", data.message); // it send the message to the client
+              }
+            });
+          });
+        } catch (err) {
+          console.error("Error connecting to MongoDB:", err.message);
+        }
+})();
