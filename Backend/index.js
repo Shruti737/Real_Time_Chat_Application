@@ -4,14 +4,21 @@ const app = express();
 const cors = require('cors');
 const authRoutes = require("./routes/auth")
 const socket = require("socket.io")
-require("dotenv").config();   //loads environment variables from a .env file into process.env
+require('dotenv').config();   // Load environment variables from .env file
+
+
+
+// Access the MongoDB connection string from environment variables
 const DB = process.env.DB;
+
+if (!DB) {
+  console.error('MongoDB URI is not defined in environment variables.');
+  process.exit(1); // Exit the process with a failure code
+}
 
 mongoose.connect(DB, {
   useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false
+  useUnifiedTopology: true
 }).then(() => {
   console.log("Connection Successful");
 }).catch((err) => {
